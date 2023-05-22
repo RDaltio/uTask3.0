@@ -13,7 +13,7 @@ function getAdvice() {
         .then(data => {
             const translatedAdvice = data.responseData.translatedText;
             adviceElement.textContent = translatedAdvice;
-            localStorage.setItem('translatedAdvice', translatedAdvice); 
+            localStorage.setItem('translatedAdvice', translatedAdvice);
         })
         .catch(error => {
             console.error('Ocorreu um erro:', error);
@@ -21,17 +21,31 @@ function getAdvice() {
         });
 }
 
-const lastRequestDay = localStorage.getItem('lastRequestDay');
-const today = new Date().toLocaleDateString();
-if (lastRequestDay !== today) {
-    getAdvice();
-    localStorage.setItem('lastRequestDay', today);
-} else {
-    const translatedAdvice = localStorage.getItem('translatedAdvice');
-    adviceElement.textContent = translatedAdvice;
+function updateAdviceOnPageLoad() {
+    const lastRequestDay = localStorage.getItem('lastRequestDay');
+    const today = new Date().toLocaleDateString();
+    if (lastRequestDay !== today) {
+        getAdvice();
+        localStorage.setItem('lastRequestDay', today);
+    } else {
+        const translatedAdvice = localStorage.getItem('translatedAdvice');
+        adviceElement.textContent = translatedAdvice;
+    }
 }
 
-setInterval(() => {
-    localStorage.removeItem('lastRequestDay');
-    getAdvice();
-}, 24 * 60 * 60 * 1000);
+function updateAdviceAtMidnight() {
+    const now = new Date();
+    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0); // Próximo horário da meia-noite
+    const timeUntilMidnight = midnight - now;
+
+    setTimeout(() => {
+        localStorage.removeItem('lastRequestDay');
+        getAdvice();
+        updateAdviceAtMidnight(); // Agendar a próxima atualização à meia-noite
+    }, timeUntilMidnight);
+}
+
+window.addEventListener('load', () => {
+    updateAdviceOnPageLoad();
+    updateAdviceAtMidnight();
+});
